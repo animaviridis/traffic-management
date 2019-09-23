@@ -16,12 +16,16 @@ class SuburbArea(object):
 
 
 class City(object):
-    def __init__(self, name=None):
+    def __init__(self, name: str = None):
         self._name = name if name is not None else ''
         self._suburbs = {}
 
     def __repr__(self):
         return f"City{' ' + self._name if self._name else ''} with suburb areas: {', '.join(self.suburb_names)}"
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def suburbs(self):
