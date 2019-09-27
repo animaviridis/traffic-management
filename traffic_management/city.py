@@ -38,7 +38,7 @@ class SuburbArea(object):
         return 0.5 * self.flow * self.waiting_time**2  # [cars * minutes]
 
     def get_inflow(self, time):
-        return self.flow * time
+        return int(self.flow * time)
 
 
 class City(object):
@@ -78,7 +78,7 @@ class City(object):
         self.suburbs[s2].prioritise()
         self.prioritised = s2
 
-        self.wait(TrafficProperties.PRIORITY_MIN_DURATION)
+        self.wait(TrafficProperties.PRIORITY_BASE_DURATION)
 
     def extend_priority(self, s):
         if not self.suburbs[s].prioritised:
@@ -87,9 +87,14 @@ class City(object):
         self.wait(TrafficProperties.PRIORITY_EXT_DURATION)
 
 
-if __name__ == '__main__':
+def define_city():
     city = City("Radiator Springs")
     city.add_suburb_area('A', 30e3)
     city.add_suburb_area('B', 45e3)
     city.add_suburb_area('C', 55e3)
     city.add_suburb_area('D', 65e3)
+    return city
+
+
+if __name__ == '__main__':
+    define_city()
