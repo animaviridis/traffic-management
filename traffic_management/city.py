@@ -1,3 +1,4 @@
+from collections import defaultdict
 from traffic_management.traffic import TrafficProperties as TP
 
 
@@ -69,6 +70,7 @@ class City(object):
                                 'extend-priority': self.evaluate_extend_priority}
 
         self.priority_record = []
+        self.priority_summary = defaultdict(lambda: 0)
 
     def __repr__(self):
         return f"City{' ' + self._name if self._name else ''} with suburb areas: {', '.join(self.suburb_names)}"
@@ -106,6 +108,7 @@ class City(object):
 
         self.wait(TP.PRIORITY_BASE_DURATION)
         self.priority_record.append((s2, TP.PRIORITY_BASE_DURATION))
+        self.priority_summary[s2] += TP.PRIORITY_BASE_DURATION
 
     def extend_priority(self, s):
         print(f"Extending {s}; queue: {tuple(self.queue.values())}")
@@ -117,6 +120,7 @@ class City(object):
         self.suburbs[self.prioritised].go(TP.PRIORITY_EXT_DURATION, accelerating=False)
 
         self.priority_record[-1] = (s, self.priority_record[-1][1] + TP.PRIORITY_EXT_DURATION)
+        self.priority_summary[s] += TP.PRIORITY_EXT_DURATION
 
     def evaluate_switch_priority(self, s1, s2):
         return self._get_total_acc_waiting_time(s2, TP.PRIORITY_BASE_DURATION)
@@ -130,7 +134,7 @@ class City(object):
             if suburb.name != s_prioritised:
                 acc_waiting_time += suburb.accumulated_waiting_time(time)
 
-        return (self._get_cars_out(s_prioritised) - 0.1*acc_waiting_time)/time  # TODO: parameter
+        return (self._get_cars_out(s_prioritised) - TP.WAIT_FACTOR*acc_waiting_time)/time
 
     def _get_cars_out(self, s_prioritised):
         change = s_prioritised != self.prioritised
@@ -140,6 +144,10 @@ class City(object):
     @property
     def queue(self):
         return {s.name: s.queue for s in self.suburbs.values()}
+
+    @property
+    def population(self):
+        return sum(s.population for s in self.suburbs.values())
 
 
 def define_city():
