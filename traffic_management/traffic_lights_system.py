@@ -8,11 +8,12 @@ city.switch_priority('', 'A')
 
 a1 = Action('switch-priority',
             parameters=(('suburb', 'S1'), ('suburb', 'S2')),
-            preconditions=(('prioritised', 'S1'),),  # TODO: S1 != S2 - possible?
+            preconditions=(('prioritised', 'S1'),),
             effects=(neg(('prioritised', 'S1')),
                      ('prioritised', 'S2'),
                      ('-=', ('total-cars', 'S2'), city.get_cars_out_from_action)),
-            external_actor=city
+            external_actor=city,
+            unique=True
             )
 
 a2 = Action('extend-priority',
@@ -28,7 +29,7 @@ domain = Domain((a1, a2))
 
 problem = Problem(domain, {'suburb': tuple(city.suburb_names)},
                   init=(('prioritised', 'A'),
-                        *tuple(('=', ('total-cars', s), city.suburbs[s].get_cars_in(10)) for s in city.suburb_names)),
+                        *tuple(('=', ('total-cars', s), city.suburbs[s].get_cars_in(20)) for s in city.suburb_names)),
                   goal=tuple(('<=', ('total-cars', s), 0) for s in city.suburb_names))
 
 
