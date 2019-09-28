@@ -56,3 +56,5 @@ problem = Problem(domain, {'suburb': tuple(city.suburb_names)},
 def plan():
     planner = DNPlanner(problem)
     planner.solve()
+    for s, t in city.priority_record:
+        print(f"{s}: {t}")

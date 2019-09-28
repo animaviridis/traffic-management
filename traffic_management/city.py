@@ -68,6 +68,8 @@ class City(object):
         self.evaluate_action = {'switch-priority': self.evaluate_switch_priority,
                                 'extend-priority': self.evaluate_extend_priority}
 
+        self.priority_record = []
+
     def __repr__(self):
         return f"City{' ' + self._name if self._name else ''} with suburb areas: {', '.join(self.suburb_names)}"
 
@@ -103,6 +105,7 @@ class City(object):
         self.suburbs[s2].go(TP.PRIORITY_BASE_DURATION, accelerating=True)
 
         self.wait(TP.PRIORITY_BASE_DURATION)
+        self.priority_record.append((s2, TP.PRIORITY_BASE_DURATION))
 
     def extend_priority(self, s):
         print(f"Extending {s}; queue: {tuple(self.queue.values())}")
@@ -112,6 +115,8 @@ class City(object):
 
         self.wait(TP.PRIORITY_EXT_DURATION)
         self.suburbs[self.prioritised].go(TP.PRIORITY_EXT_DURATION, accelerating=False)
+
+        self.priority_record[-1] = (s, self.priority_record[-1][1] + TP.PRIORITY_EXT_DURATION)
 
     def evaluate_switch_priority(self, s1, s2):
         return self._get_total_acc_waiting_time(s2, TP.PRIORITY_BASE_DURATION)
