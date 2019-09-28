@@ -2,6 +2,10 @@ import pyddl
 
 
 class Action(pyddl.Action):
+    def __init__(self, *args, external_actor=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.external_actor = external_actor
+
     def ground(self, *args):
         return GroundedAction(self, *args)
 
@@ -11,6 +15,7 @@ class GroundedAction(object):
         """Note: this method comes mostly from pyddl._GroundedAction.__init__; it has been split into sub-methods."""
 
         self.name = action.name
+        self.external_actor = action.external_actor
 
         ground = self._grounder(action.arg_names, args)
 
@@ -75,6 +80,12 @@ class GroundedAction(object):
 
         return _ground_by_names
 
+    def evaluate_external(self):
+        return self.external_actor.evaluate_action[self.name](*self.sig[1:])
+
+    def apply_external(self):
+        return self.external_actor.apply_action[self.name](*self.sig[1:])
+
     def __str__(self):
         """Note: this method is a copy of pyddl._GroundedAction"""
 
@@ -83,16 +94,6 @@ class GroundedAction(object):
 
 
 class State(pyddl.State):
-    def __init__(self, *args, external_actor=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.external_actor = external_actor
-
-    def evaluate_action(self, action):
-        return self.external_actor.evaluate_action[action.name](*action.sig[1:])
-
-    def apply_action(self, action):
-        return self.external_actor.apply_action[action.name](*action.sig[1:])
-
     def apply(self, action, monotone=False):
         """Note: this method comes mostly from pyddl.State.apply; it is overwritten to support functional numerical
         predicate evaluation at application of the given state - to account for dynamics of the external model.
@@ -110,9 +111,7 @@ class State(pyddl.State):
         for function, (value_sign, value_func, value_args) in action.num_effects:
             new_functions[function] += value_sign*value_func(action.name, *value_args)  # evaluate the value function
 
-        self.apply_action(action)
-
-        return State(new_preds, new_functions, self.cost + self.evaluate_action(action), (self, action))
+        return State(new_preds, new_functions, self.cost + action.evaluate_external(), (self, action))
 
 
 class Problem(pyddl.Problem):

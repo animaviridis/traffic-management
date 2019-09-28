@@ -92,6 +92,7 @@ class City(object):
                 suburb.wait(time)
 
     def switch_priority(self, s1, s2):
+        print(f"Switching to {s2}; queue: {tuple(self.queue.values())}")
         if s1:
             if not self.suburbs[s1].prioritised:
                 raise ValueError(f"{s1} is not currently prioritised")
@@ -104,6 +105,8 @@ class City(object):
         self.wait(TP.PRIORITY_BASE_DURATION)
 
     def extend_priority(self, s):
+        print(f"Extending {s}; queue: {tuple(self.queue.values())}")
+
         if not self.suburbs[s].prioritised:
             raise ValueError(f"{s} is not currently prioritised")
 
@@ -118,11 +121,20 @@ class City(object):
 
     def _get_total_acc_waiting_time(self, s_prioritised, time):
         acc_waiting_time = 0
-        for suburb in self.suburbs:
+        for suburb in self.suburbs.values():
             if suburb.name != s_prioritised:
                 acc_waiting_time += suburb.accumulated_waiting_time(time)
 
-        return acc_waiting_time
+        return acc_waiting_time - self._get_cars_out(s_prioritised)
+
+    def _get_cars_out(self, s_prioritised):
+        change = s_prioritised != self.prioritised
+        time = TP.PRIORITY_EXT_DURATION if change else TP.PRIORITY_BASE_DURATION
+        return self.suburbs[s_prioritised].get_cars_out(time, change)
+
+    @property
+    def queue(self):
+        return {s.name: s.queue for s in self.suburbs.values()}
 
 
 def define_city():

@@ -1,13 +1,16 @@
-from pyddl import Domain, neg, planner
+from pyddl import Domain, neg
 from custom_pyddl.cpyddl import Action, Problem
+from custom_pyddl.cplanner import DNPlanner
 from traffic_management.city import define_city
 from traffic_management.traffic import TrafficProperties
 
 city = define_city()
+city.wait(10)
+city.switch_priority('', 'A')
 
 
 def tnc(suburb):
-    return city.suburbs[suburb].get_cars_in(2)  # TODO: time window from arg parser
+    return city.suburbs[suburb].get_cars_in(10)  # TODO: time window from arg parser
 
 
 def fbs(action_name, *suburbs):
@@ -20,7 +23,7 @@ def fbs(action_name, *suburbs):
         suburb = suburbs[0]
         accelerating = False
     n = city.suburbs[suburb].get_cars_out(time, accelerating)
-    print(f"{action_name}{suburbs}: number of cars passing from {suburb}: {n}")
+    # print(f"{action_name}{suburbs}: number of cars passing from {suburb}: {n}; queue: {tuple(city.queue.values())}")
     return n
 
 
@@ -29,13 +32,15 @@ a1 = Action('switch-priority',
             preconditions=(('prioritised', 'S1'),),  # TODO: S1 != S2 - possible?
             effects=(neg(('prioritised', 'S1')),
                      ('prioritised', 'S2'),
-                     ('-=', ('total-cars', 'S2'), fbs))
+                     ('-=', ('total-cars', 'S2'), fbs)),
+            external_actor=city
             )
 
 a2 = Action('extend-priority',
             parameters=(('suburb', 'S'),),
             preconditions=(('prioritised', 'S'),),
-            effects=(('-=', ('total-cars', 'S'), fbs),)
+            effects=(('-=', ('total-cars', 'S'), fbs),),
+            external_actor=city
             )
 
 
@@ -49,10 +54,5 @@ problem = Problem(domain, {'suburb': tuple(city.suburb_names)},
 
 
 def plan():
-    traffic_plan = planner(problem)
-    if traffic_plan is None:
-        print('No Plan!')
-    else:
-        for action in traffic_plan:
-            print(action)
-
+    planner = DNPlanner(problem)
+    planner.solve()
