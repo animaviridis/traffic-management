@@ -32,7 +32,7 @@ class TrafficProperties(object):
 
     @staticmethod
     def define_parser():
-        parser = ArgumentParser(description="TrafficProperties argument parser")
+        parser = ArgumentParser(description="TrafficProperties argument parser", add_help=False)
         parser.add_argument('--junction-flow', default=200, type=float,
                             help="Flow through the junction [cars/minute].")
         parser.add_argument('--wait-factor', default=0.01, type=float,
@@ -44,4 +44,6 @@ class TrafficProperties(object):
                             help="Priority extension time; can be applied any times for given prioritised area [min].")
         parser.add_argument('--acc-time', default=0.5, type=float,
                             help="Time needed to reach the nominal junction flow after switching priority.")
+
+        return parser
 

@@ -1,4 +1,6 @@
 from collections import defaultdict
+from argparse import ArgumentParser
+
 from traffic_management.traffic import TrafficProperties
 from traffic_management.suburb_area import SuburbArea
         
@@ -34,7 +36,7 @@ class City(object):
         return list(self._suburbs.keys())
 
     def add_suburb_area(self, name, *args, **kwargs):
-        self._suburbs[name] = SuburbArea(name, *args, **kwargs)
+        self._suburbs[name] = SuburbArea(name, *args, traffic_properties=self.tp, **kwargs)
 
     def wait(self, time=1):
         for suburb in self.suburbs.values():
@@ -96,9 +98,20 @@ class City(object):
     def population(self):
         return sum(s.population for s in self.suburbs.values())
 
+    @staticmethod
+    def define_parser():
+        parser = ArgumentParser(description="City class argument parser", parents=[TrafficProperties.define_parser()],
+                                add_help=False)
+        parser.add_argument('--name', type=str, default="Radiator Springs", help="City name")
 
-def define_city():
-    city = City("Radiator Springs")
+    @staticmethod
+    def from_parser(parsed_args=None):
+        tp = TrafficProperties.from_parser(parsed_args) if parsed_args else None
+        return City(parsed_args.name if parsed_args else "Radiator Springs", traffic_properties=tp)
+
+
+def define_city(parsed_args=None):
+    city = City.from_parser(parsed_args)
     city.add_suburb_area('A', 30e3)
     city.add_suburb_area('B', 45e3)
     city.add_suburb_area('C', 55e3)
