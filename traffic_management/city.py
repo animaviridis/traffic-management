@@ -44,7 +44,6 @@ class City(object):
     def switch_priority(self, s1, s2, time=None):
         time = time or self.tp.base_time
 
-        print(f"Switching to {s2}; queue: {tuple(self.queue.values())}")
         if s1:
             if not self.suburbs[s1].prioritised:
                 raise ValueError(f"{s1} is not currently prioritised")
@@ -54,16 +53,16 @@ class City(object):
         self.prioritised = s2
         self.priority_record.append((s2, time))
         self._apply_priority(time)
+        print(f"Switched to {s2}; queue: {tuple(self.queue.values())}")
 
     def extend_priority(self, s, time=None):
         time = time or self.tp.ext_time
-        print(f"Extending {s}; queue: {tuple(self.queue.values())}")
-
         if not self.suburbs[s].prioritised:
             raise ValueError(f"{s} is not currently prioritised")
 
         self.priority_record[-1] = (s, self.priority_record[-1][1] + time)
         self._apply_priority(time)
+        print(f"Extended {s}; queue: {tuple(self.queue.values())}")
 
     def _apply_priority(self, time):
         s = self.prioritised

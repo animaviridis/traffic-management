@@ -34,8 +34,6 @@ problem = Problem(domain, {'suburb': tuple(city.suburb_names)},
 
 
 def plan():
-    city.wait(2)
-
     planner = DNPlanner(problem)
     planner.solve()
 
