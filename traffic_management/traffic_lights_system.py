@@ -1,6 +1,7 @@
 from pyddl import Domain, neg
-from custom_pyddl.cpyddl import Action, Problem
-from custom_pyddl.cplanner import DNPlanner
+from custom_pyddl.action import Action
+from custom_pyddl.problem import Problem
+from custom_pyddl.planner import DNPlanner
 from traffic_management.city import define_city
 
 city = define_city()
