@@ -1,12 +1,14 @@
 from collections import defaultdict
-from traffic_management.traffic import TrafficProperties as TP
+from traffic_management.traffic import TrafficProperties
 
 
 class SuburbArea(object):
-    def __init__(self, name: str, population: float):
+    def __init__(self, name: str, population: float, traffic_properties=None):
         self._name = name
         self._population = int(population)
-        self.flow = TP.FLOW_FACTOR * self.population
+
+        self.tp = traffic_properties or TrafficProperties()
+        self.flow = self.tp.FLOW_FACTOR * self.population
         self.queue = 0
         self.waiting_time = 0
         self.prioritised = False
@@ -23,10 +25,16 @@ class SuburbArea(object):
         return self._population
 
     def wait(self, time=1):
+        if self.prioritised:
+            raise RuntimeError(f"Suburb {self.name} is currently prioritised - 'wait' not applicable")
+
         self.queue += self.get_cars_in(time)
         self.waiting_time += time
 
     def go(self, time, accelerating=False):
+        if not self.prioritised:
+            raise RuntimeError(f"Suburb {self.name} is not currently prioritised - 'go' not applicable")
+
         n_cars_passing = self.get_cars_out(time, accelerating)
         self.queue -= (n_cars_passing - self.get_cars_in(time))  # TODO: verify
 
@@ -53,14 +61,16 @@ class SuburbArea(object):
                 assumed to be always smaller than the pass time."""
         
         n_full_unloading = self.queue + self.get_cars_in(time)
-        n_partial_unloading = TP.JUNCTION_FLOW * (time - accelerating * 0.5 * TP.ACCELERATION_TIME)
+        n_partial_unloading = self.tp.junction_flow * (time - accelerating * 0.5 * self.tp.acc_time)
 
         return int(min(n_full_unloading, n_partial_unloading))  # round down to nearest integer
         
 
 class City(object):
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None, traffic_properties=None):
         self._name = name if name is not None else ''
+        self.tp = traffic_properties or TrafficProperties()
+
         self._suburbs = {}
         self.prioritised = ''
 
@@ -104,11 +114,11 @@ class City(object):
 
         self.suburbs[s2].prioritise()
         self.prioritised = s2
-        self.suburbs[s2].go(TP.PRIORITY_BASE_DURATION, accelerating=True)
+        self.suburbs[s2].go(self.tp.base_time, accelerating=True)
 
-        self.wait(TP.PRIORITY_BASE_DURATION)
-        self.priority_record.append((s2, TP.PRIORITY_BASE_DURATION))
-        self.priority_summary[s2] += TP.PRIORITY_BASE_DURATION
+        self.wait(self.tp.base_time)
+        self.priority_record.append((s2, self.tp.base_time))
+        self.priority_summary[s2] += self.tp.base_time
 
     def extend_priority(self, s):
         print(f"Extending {s}; queue: {tuple(self.queue.values())}")
@@ -116,17 +126,17 @@ class City(object):
         if not self.suburbs[s].prioritised:
             raise ValueError(f"{s} is not currently prioritised")
 
-        self.wait(TP.PRIORITY_EXT_DURATION)
-        self.suburbs[self.prioritised].go(TP.PRIORITY_EXT_DURATION, accelerating=False)
+        self.wait(self.tp.ext_time)
+        self.suburbs[self.prioritised].go(self.tp.ext_time, accelerating=False)
 
-        self.priority_record[-1] = (s, self.priority_record[-1][1] + TP.PRIORITY_EXT_DURATION)
-        self.priority_summary[s] += TP.PRIORITY_EXT_DURATION
+        self.priority_record[-1] = (s, self.priority_record[-1][1] + self.tp.ext_time)
+        self.priority_summary[s] += self.tp.ext_time
 
     def evaluate_switch_priority(self, s1, s2):
-        return self._get_total_acc_waiting_time(s2, TP.PRIORITY_BASE_DURATION)
+        return self._get_total_acc_waiting_time(s2, self.tp.base_time)
 
     def evaluate_extend_priority(self, s):
-        return self._get_total_acc_waiting_time(s, TP.PRIORITY_EXT_DURATION)
+        return self._get_total_acc_waiting_time(s, self.tp.ext_time)
 
     def _get_total_acc_waiting_time(self, s_prioritised, time):
         acc_waiting_time = 0
@@ -134,11 +144,11 @@ class City(object):
             if suburb.name != s_prioritised:
                 acc_waiting_time += suburb.accumulated_waiting_time(time)
 
-        return (self._get_cars_out(s_prioritised) - TP.WAIT_FACTOR*acc_waiting_time)/time
+        return (self._get_cars_out(s_prioritised) - self.tp.wait_factor * acc_waiting_time) / time
 
     def _get_cars_out(self, s_prioritised):
         change = s_prioritised != self.prioritised
-        time = TP.PRIORITY_EXT_DURATION if change else TP.PRIORITY_BASE_DURATION
+        time = self.tp.ext_time if change else self.tp.base_time
         return self.suburbs[s_prioritised].get_cars_out(time, change)
 
     @property

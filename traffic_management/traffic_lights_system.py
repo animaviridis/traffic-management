@@ -2,7 +2,6 @@ from pyddl import Domain, neg
 from custom_pyddl.cpyddl import Action, Problem
 from custom_pyddl.cplanner import DNPlanner
 from traffic_management.city import define_city
-from traffic_management.traffic import TrafficProperties
 
 city = define_city()
 city.switch_priority('', 'A')
@@ -14,11 +13,11 @@ def tnc(suburb):
 
 def fbs(action_name, *suburbs):
     if action_name == 'switch-priority':
-        time = TrafficProperties.PRIORITY_BASE_DURATION
+        time = city.tp.base_time
         suburb = suburbs[1]
         accelerating = True
     else:
-        time = TrafficProperties.PRIORITY_EXT_DURATION
+        time = city.tp.ext_time
         suburb = suburbs[0]
         accelerating = False
     n = city.suburbs[suburb].get_cars_out(time, accelerating)
