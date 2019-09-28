@@ -22,25 +22,27 @@ class SuburbArea(object):
         return self._population
 
     def wait(self, time=1):
-        self.queue += self.get_inflow(time)
+        self.queue += self.get_cars_in(time)
         self.waiting_time += time
+
+    def go(self, time, accelerating=False):
+        n_cars_passing = self.get_cars_out(time, accelerating)
+        self.queue -= (n_cars_passing - self.get_cars_in(time))  # TODO: verify
 
     def prioritise(self):
         self.prioritised = True
-        self.queue = 0  # assume that the junction flow is big enough for all cars to pass  # TODO
         self.waiting_time = 0
 
     def unprioritise(self):
         self.prioritised = False
 
-    @property
-    def accumulated_waiting_time(self):
-        return 0.5 * self.flow * self.waiting_time**2  # [cars * minutes]
+    def accumulated_waiting_time(self, add_time):
+        return 0.5 * self.flow * (self.waiting_time + add_time)**2  # [cars * minutes]
 
-    def get_inflow(self, time):
+    def get_cars_in(self, time):
         return int(self.flow * time)
     
-    def get_n_cars_passing(self, time, accelerating=False):
+    def get_cars_out(self, time, accelerating=False):
         """Number of cars which can pass through the junction in given time.
         
         The number of cars is the minimum of two following quantities:
@@ -49,7 +51,7 @@ class SuburbArea(object):
                 (partial queue unloading case); this also takes into account initial acceleration, whose time is
                 assumed to be always smaller than the pass time."""
         
-        n_full_unloading = self.queue + self.get_inflow(time)
+        n_full_unloading = self.queue + self.get_cars_in(time)
         n_partial_unloading = TP.JUNCTION_FLOW * (time - accelerating * 0.5 * TP.ACCELERATION_TIME)
 
         return int(min(n_full_unloading, n_partial_unloading))  # round down to nearest integer
@@ -60,6 +62,11 @@ class City(object):
         self._name = name if name is not None else ''
         self._suburbs = {}
         self.prioritised = ''
+
+        self.apply_action = {'switch-priority': self.switch_priority,
+                             'extend-priority': self.extend_priority}
+        self.evaluate_action = {'switch-priority': self.evaluate_switch_priority,
+                                'extend-priority': self.evaluate_extend_priority}
 
     def __repr__(self):
         return f"City{' ' + self._name if self._name else ''} with suburb areas: {', '.join(self.suburb_names)}"
@@ -89,8 +96,10 @@ class City(object):
             if not self.suburbs[s1].prioritised:
                 raise ValueError(f"{s1} is not currently prioritised")
             self.suburbs[s1].unprioritise()
+
         self.suburbs[s2].prioritise()
         self.prioritised = s2
+        self.suburbs[s2].go(TP.PRIORITY_BASE_DURATION, accelerating=True)
 
         self.wait(TP.PRIORITY_BASE_DURATION)
 
@@ -99,6 +108,21 @@ class City(object):
             raise ValueError(f"{s} is not currently prioritised")
 
         self.wait(TP.PRIORITY_EXT_DURATION)
+        self.suburbs[self.prioritised].go(TP.PRIORITY_EXT_DURATION, accelerating=False)
+
+    def evaluate_switch_priority(self, s1, s2):
+        return self._get_total_acc_waiting_time(s2, TP.PRIORITY_BASE_DURATION)
+
+    def evaluate_extend_priority(self, s):
+        return self._get_total_acc_waiting_time(s, TP.PRIORITY_EXT_DURATION)
+
+    def _get_total_acc_waiting_time(self, s_prioritised, time):
+        acc_waiting_time = 0
+        for suburb in self.suburbs:
+            if suburb.name != s_prioritised:
+                acc_waiting_time += suburb.accumulated_waiting_time(time)
+
+        return acc_waiting_time
 
 
 def define_city():

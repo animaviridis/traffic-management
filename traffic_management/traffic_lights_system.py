@@ -7,7 +7,7 @@ city = define_city()
 
 
 def tnc(suburb):
-    return city.suburbs[suburb].get_inflow(2)  # TODO: time window from arg parser
+    return city.suburbs[suburb].get_cars_in(2)  # TODO: time window from arg parser
 
 
 def fbs(action_name, *suburbs):
@@ -19,7 +19,7 @@ def fbs(action_name, *suburbs):
         time = TrafficProperties.PRIORITY_EXT_DURATION
         suburb = suburbs[0]
         accelerating = False
-    n = city.suburbs[suburb].get_n_cars_passing(time, accelerating)
+    n = city.suburbs[suburb].get_cars_out(time, accelerating)
     print(f"{action_name}{suburbs}: number of cars passing from {suburb}: {n}")
     return n
 
