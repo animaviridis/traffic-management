@@ -130,7 +130,7 @@ class City(object):
             if suburb.name != s_prioritised:
                 acc_waiting_time += suburb.accumulated_waiting_time(time)
 
-        return acc_waiting_time - self._get_cars_out(s_prioritised)
+        return (self._get_cars_out(s_prioritised) - 0.1*acc_waiting_time)/time  # TODO: parameter
 
     def _get_cars_out(self, s_prioritised):
         change = s_prioritised != self.prioritised

@@ -30,11 +30,11 @@ class DNPlanner(object):
             raise RuntimeError("No plan!")
 
         # select the best node
-        sorted_actions = sorted(available_actions, key=(lambda el: el[1]))
-        best_action, least_cost = sorted_actions[0]
+        sorted_actions = sorted(available_actions, key=(lambda el: el[1]), reverse=True)
+        best_action, highest_utility = sorted_actions[0]
 
         self.current_state = node.apply(best_action)
-        self._total_cost += least_cost
+        self._total_cost += highest_utility
 
         best_action.apply_external()
 
