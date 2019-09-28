@@ -1,11 +1,11 @@
-from traffic_management.traffic import TrafficProperties
+from traffic_management.traffic import TrafficProperties as TP
 
 
 class SuburbArea(object):
     def __init__(self, name: str, population: float):
         self._name = name
         self._population = int(population)
-        self.flow = TrafficProperties.FLOW_FACTOR * self.population
+        self.flow = TP.FLOW_FACTOR * self.population
         self.queue = 0
         self.waiting_time = 0
         self.prioritised = False
@@ -39,7 +39,21 @@ class SuburbArea(object):
 
     def get_inflow(self, time):
         return int(self.flow * time)
+    
+    def get_n_cars_passing(self, time, accelerating=False):
+        """Number of cars which can pass through the junction in given time.
+        
+        The number of cars is the minimum of two following quantities:
+            - all cars currently in the queue plus inflow in the given time (full queue unloading case)
+            - number of cars which can pass through the junction in the given time, given max junction flow
+                (partial queue unloading case); this also takes into account initial acceleration, whose time is
+                assumed to be always smaller than the pass time."""
+        
+        n_full_unloading = self.queue + self.get_inflow(time)
+        n_partial_unloading = TP.JUNCTION_FLOW * (time - accelerating * 0.5 * TP.ACCELERATION_TIME)
 
+        return int(min(n_full_unloading, n_partial_unloading))  # round down to nearest integer
+        
 
 class City(object):
     def __init__(self, name: str = None):
@@ -78,13 +92,13 @@ class City(object):
         self.suburbs[s2].prioritise()
         self.prioritised = s2
 
-        self.wait(TrafficProperties.PRIORITY_BASE_DURATION)
+        self.wait(TP.PRIORITY_BASE_DURATION)
 
     def extend_priority(self, s):
         if not self.suburbs[s].prioritised:
             raise ValueError(f"{s} is not currently prioritised")
 
-        self.wait(TrafficProperties.PRIORITY_EXT_DURATION)
+        self.wait(TP.PRIORITY_EXT_DURATION)
 
 
 def define_city():

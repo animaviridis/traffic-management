@@ -1,24 +1,27 @@
-from pyddl import Domain, Problem, neg, planner
-from custom_pyddl.cpyddl import Action
+from pyddl import Domain, neg, planner
+from custom_pyddl.cpyddl import Action, Problem
 from traffic_management.city import define_city
 from traffic_management.traffic import TrafficProperties
-
 
 city = define_city()
 
 
 def tnc(suburb):
-    return city.suburbs[suburb].get_inflow(5)  # TODO: time window from arg parser
+    return city.suburbs[suburb].get_inflow(2)  # TODO: time window from arg parser
 
 
-def fbs(action_name, *suburbs):  # TODO: make it reasonable
+def fbs(action_name, *suburbs):
     if action_name == 'switch-priority':
         time = TrafficProperties.PRIORITY_BASE_DURATION
         suburb = suburbs[1]
+        accelerating = True
     else:
         time = TrafficProperties.PRIORITY_EXT_DURATION
         suburb = suburbs[0]
-    return 10*city.suburbs[suburb].flow * time
+        accelerating = False
+    n = city.suburbs[suburb].get_n_cars_passing(time, accelerating)
+    print(f"{action_name}{suburbs}: number of cars passing from {suburb}: {n}")
+    return n
 
 
 a1 = Action('switch-priority',
@@ -44,11 +47,12 @@ problem = Problem(domain, {'suburb': tuple(city.suburb_names)},
                         *tuple(('=', ('total-cars', s), tnc(s)) for s in city.suburb_names)),
                   goal=tuple(('<=', ('total-cars', s), 0) for s in city.suburb_names))
 
+
 def plan():
-    plan = planner(problem)
-    if plan is None:
+    traffic_plan = planner(problem)
+    if traffic_plan is None:
         print('No Plan!')
     else:
-        for action in plan:
+        for action in traffic_plan:
             print(action)
 

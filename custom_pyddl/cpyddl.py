@@ -8,6 +8,8 @@ class Action(pyddl.Action):
 
 class GroundedAction(object):
     def __init__(self, action, *args):
+        """Note: this method comes mostly from pyddl._GroundedAction.__init__; it has been split into sub-methods."""
+
         self.name = action.name
 
         ground = self._grounder(action.arg_names, args)
@@ -33,13 +35,10 @@ class GroundedAction(object):
         for effect in action.effects:
             if effect[0] == -1:
                 self.del_effects.append(ground(effect[1]))
-            elif effect[0] == '+=':
+            elif effect[0] in ['+=', '-=']:
                 function = ground(effect[1])
-                value = effect[2](action.name, *args)
-                self.num_effects.append((function, value))
-            elif effect[0] == '-=':
-                function = ground(effect[1])
-                value = -effect[2](action.name, *args)
+                value_sign = -1 if effect[0] == '-=' else 1
+                value = (value_sign, effect[2], args)
                 self.num_effects.append((function, value))
             else:
                 self.add_effects.append(ground(effect))
@@ -55,7 +54,7 @@ class GroundedAction(object):
                         operands[i] = pre[i + 1]
                     else:
                         operands[i] = ground(pre[i + 1])
-                np = _num_pred(pyddl.NUM_OPS[pre[0]], *operands)
+                np = pyddl._num_pred(pyddl.NUM_OPS[pre[0]], *operands)
                 self.num_preconditions.append(np)
             else:
                 self.preconditions.append(ground(pre))
@@ -81,3 +80,33 @@ class GroundedAction(object):
 
         arglist = ', '.join(map(str, self.sig[1:]))
         return '%s(%s)' % (self.sig[0], arglist)
+
+
+class State(pyddl.State):
+    def apply(self, action, monotone=False):
+        """Note: this method comes mostly from pyddl.State.apply; it is overwritten to support functional numerical
+        predicate evaluation at application of the given state - to account for dynamics of the external model.
+
+        Apply the action to this state to produce a new state.
+        If monotone, ignore the delete list (for A* heuristic)
+        """
+
+        new_preds = set(self.predicates)
+        new_preds |= set(action.add_effects)
+        if not monotone:
+            new_preds -= set(action.del_effects)
+        new_functions = dict()
+        new_functions.update(self.functions)
+        for function, (value_sign, value_func, value_args) in action.num_effects:
+            new_functions[function] += value_sign*value_func(action.name, *value_args)  # evaluate the value function
+        return State(new_preds, new_functions, self.cost + 1, (self, action))
+
+
+class Problem(pyddl.Problem):
+    """Note: this object is an extension of pyddl.Problem, made for handling of the functional numerical effects."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # use the subclassed State instead of pyddl.State
+        self.initial_state = State(self.initial_state.predicates, self.initial_state.f_dict)
