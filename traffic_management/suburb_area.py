@@ -8,7 +8,8 @@ class SuburbArea(object):
 
         self.tp = traffic_properties or TrafficProperties()
         self.flow = self.tp.FLOW_FACTOR * self.population
-        self.queue = 0
+        self.queue = 0  # number of cars waiting in front of the junction
+        self.last_passed = 0  # number of cars that have passed in the last (current) priority setting
         self.waiting_time = 0
         self.prioritised = False
 
@@ -30,12 +31,13 @@ class SuburbArea(object):
         self.queue += self.get_cars_in(time)
         self.waiting_time += time
 
-    def go(self, time, accelerating=False):
+    def go(self, time):
         if not self.prioritised:
             raise RuntimeError(f"Suburb {self.name} is not currently prioritised - 'go' not applicable")
 
-        n_cars_passing = self.get_cars_out(time, accelerating)
+        n_cars_passing = self.get_cars_out(time)
         self.queue -= (n_cars_passing - self.get_cars_in(time))  # TODO: verify
+        self.last_passed += n_cars_passing
 
     def prioritise(self):
         self.prioritised = True
@@ -43,6 +45,7 @@ class SuburbArea(object):
 
     def unprioritise(self):
         self.prioritised = False
+        self.last_passed = 0
 
     def accumulated_waiting_time(self, add_time):
         return 0.5 * self.flow * (self.waiting_time + add_time) ** 2  # [cars * minutes]
@@ -50,16 +53,29 @@ class SuburbArea(object):
     def get_cars_in(self, time):
         return int(self.flow * time)
 
-    def get_cars_out(self, time, accelerating=False):
+    def get_cars_out(self, time=None):
         """Number of cars which can pass through the junction in given time.
 
         The number of cars is the minimum of two following quantities:
             - all cars currently in the queue plus inflow in the given time (full queue unloading case)
             - number of cars which can pass through the junction in the given time, given max junction flow
-                (partial queue unloading case); this also takes into account initial acceleration, whose time is
-                assumed to be always smaller than the pass time."""
+                (partial queue unloading case).
+
+        If the was not currently prioritised, the latter takes into account initial acceleration.
+        """
+
+        if self.last_passed:
+            delay = 0
+            time = time or self.tp.ext_time
+        else:
+            delay = 0.5 * self.tp.acc_time
+            time = time or self.tp.base_time
+
+        if delay > time:
+            raise ValueError(f"Initial priority time: {time} min too short (must be at least {delay} min)")
+
+        n_partial_unloading = self.tp.junction_flow * (time - delay)
 
         n_full_unloading = self.queue + self.get_cars_in(time)
-        n_partial_unloading = self.tp.junction_flow * (time - accelerating * 0.5 * self.tp.acc_time)
 
         return int(min(n_full_unloading, n_partial_unloading))  # round down to nearest integer

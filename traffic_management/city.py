@@ -13,8 +13,7 @@ class City(object):
 
         self.apply_action = {'switch-priority': self.switch_priority,
                              'extend-priority': self.extend_priority}
-        self.evaluate_action = {'switch-priority': self.evaluate_switch_priority,
-                                'extend-priority': self.evaluate_extend_priority}
+        self.evaluate_action = {f: self.evaluate_priority_decision for f in ('switch-priority', 'extend-priority')}
 
         self.priority_record = []
         self.priority_summary = defaultdict(lambda: 0)
@@ -42,7 +41,9 @@ class City(object):
             if not suburb.prioritised:
                 suburb.wait(time)
 
-    def switch_priority(self, s1, s2):
+    def switch_priority(self, s1, s2, time=None):
+        time = time or self.tp.base_time
+
         print(f"Switching to {s2}; queue: {tuple(self.queue.values())}")
         if s1:
             if not self.suburbs[s1].prioritised:
@@ -51,42 +52,42 @@ class City(object):
 
         self.suburbs[s2].prioritise()
         self.prioritised = s2
-        self.suburbs[s2].go(self.tp.base_time, accelerating=True)
+        self.priority_record.append((s2, time))
+        self._apply_priority(time)
 
-        self.wait(self.tp.base_time)
-        self.priority_record.append((s2, self.tp.base_time))
-        self.priority_summary[s2] += self.tp.base_time
-
-    def extend_priority(self, s):
+    def extend_priority(self, s, time=None):
+        time = time or self.tp.ext_time
         print(f"Extending {s}; queue: {tuple(self.queue.values())}")
 
         if not self.suburbs[s].prioritised:
             raise ValueError(f"{s} is not currently prioritised")
 
-        self.wait(self.tp.ext_time)
-        self.suburbs[self.prioritised].go(self.tp.ext_time, accelerating=False)
+        self.priority_record[-1] = (s, self.priority_record[-1][1] + time)
+        self._apply_priority(time)
 
-        self.priority_record[-1] = (s, self.priority_record[-1][1] + self.tp.ext_time)
-        self.priority_summary[s] += self.tp.ext_time
+    def _apply_priority(self, time):
+        s = self.prioritised
+        self.suburbs[s].go(time)
+        self.wait(time)
+        self.priority_summary[s] += time
 
-    def evaluate_switch_priority(self, s1, s2):
-        return self._get_total_acc_waiting_time(s2, self.tp.base_time)
+    def evaluate_priority_decision(self, *suburbs, time=None):
+        s = suburbs[-1]
+        time = time or (self.tp.base_time if len(suburbs) > 1 else self.tp.ext_time)
+        return (self.get_cars_out(s, time) - self.tp.wait_factor * self.get_acc_waiting_time(s, time)) / time
 
-    def evaluate_extend_priority(self, s):
-        return self._get_total_acc_waiting_time(s, self.tp.ext_time)
-
-    def _get_total_acc_waiting_time(self, s_prioritised, time):
+    def get_acc_waiting_time(self, s_prioritised, time):
         acc_waiting_time = 0
         for suburb in self.suburbs.values():
             if suburb.name != s_prioritised:
                 acc_waiting_time += suburb.accumulated_waiting_time(time)
+        return acc_waiting_time
 
-        return (self._get_cars_out(s_prioritised) - self.tp.wait_factor * acc_waiting_time) / time
+    def get_cars_out(self, s_prioritised, time=None):
+        return self.suburbs[s_prioritised].get_cars_out(time)
 
-    def _get_cars_out(self, s_prioritised):
-        change = s_prioritised != self.prioritised
-        time = self.tp.ext_time if change else self.tp.base_time
-        return self.suburbs[s_prioritised].get_cars_out(time, change)
+    def get_cars_out_from_action(self, *args):
+        return self.get_cars_out(args[-1])
 
     @property
     def queue(self):
