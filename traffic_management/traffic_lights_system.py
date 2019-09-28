@@ -7,13 +7,12 @@ city = define_city()
 
 
 def tnc(suburb):
-    return city.suburbs[suburb].get_inflow(20)  # TODO: time window from arg parser
+    return city.suburbs[suburb].get_inflow(5)  # TODO: time window from arg parser
 
 
 a1 = Action('switch-priority',
             parameters=(('suburb', 'S1'), ('suburb', 'S2')),
-            preconditions=(('prioritised', 'S1'),
-                           neg(('prioritised', 'S2'))),
+            preconditions=(('prioritised', 'S1'),),  # TODO: S1 != S2 - possible?
             effects=(neg(('prioritised', 'S1')),
                      ('prioritised', 'S2'),
                      ('-=', ('total-cars', 'S2'), TrafficProperties.get_base_outflow()))
