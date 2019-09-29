@@ -103,6 +103,7 @@ class City(object):
         parser = ArgumentParser(description="City class argument parser", parents=[TrafficProperties.define_parser()],
                                 add_help=False)
         parser.add_argument('--name', type=str, default="Radiator Springs", help="City name")
+        return parser
 
     @staticmethod
     def from_parser(parsed_args=None):
