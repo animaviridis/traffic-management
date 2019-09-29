@@ -4,9 +4,36 @@ A simple programme to manage traffic in a simplified model of a city,
 based on planning (PDDL) and utility-driven search algorithm
 (see the task specifications file: '*assessment_CS5060_ASMNT_C_2019_2020.pdf*').
 
-##  Disclaimer
-Code in package *custom_pyddl* is a customised version of Python package *pyddl*, which can be found at:
+## Installation and running
+## Installation
+To install the program, please run the *setup.py* script:
+
+*python setup.py install*
+
+
+### Special dependencies
+The package requires package *PyDDL* to be installed. It can be found at:
 https://github.com/garydoranjr/pyddl.
+
+It can be installed by executing the following command:
+
+*pip install -e git+https://github.com/garydoranjr/pyddl.git#egg=pyddl*
+
+Detailed/alternative installation instructions are available at the project home page.
+
+### Execution
+The main planner script is: '*traffic_management/traffic_planner/traffic_lights_system.py*'
+After navigating to the '*traffic_management/traffic_planner/*' directory, it can be executed by:
+
+*python traffic_lights_system.py*
+
+To learn about the available options to adjust the planning problem, type:
+
+*python traffic_lights_system.py --help*
+
+
+##  Disclaimer
+Code in package *custom_pyddl* is a customised version of *PyDDL*.
 
 The aforementioned customisation includes:
 - **for PDDL-like domain and problem definition:**
@@ -19,13 +46,3 @@ The aforementioned customisation includes:
     - borrowing a considerable part of the original planner
     to maintain its compatibility with the domain and problem definition (usage, syntax, etc.)
     - replacing the A* search technique with a utility-driven hill-climbing algorithm
-
-
-### Note
-Due to subclassing, the original *pyddl* package is still needed to run this program.
-It can be installed by executing the following command:
-
-*pip install -e git+https://github.com/garydoranjr/pyddl.git#egg=pyddl*
-
-Detailed/alternative installation instructions are available at the project home page
-(https://github.com/garydoranjr/pyddl).
