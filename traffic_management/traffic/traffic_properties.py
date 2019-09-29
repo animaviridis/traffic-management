@@ -5,7 +5,7 @@ import numpy as np
 _working_days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri')
 _weekend = ('Sat', 'Sun')
 _weekdays = {**{day: 1 for day in _working_days},
-             **{calm_day: 0 for calm_day in ('Sat', 'Sun')}}
+             **{day: 0 for day in _weekend}}
 
 _hour_limits = [dt.time(hour=h) for h in (7, 10, 16, 19)]
 _periods = {k: k%2 for k in range(5)}
@@ -41,9 +41,10 @@ class TrafficSchedule(object):
         return self._time
 
     def _set_weekday(self, weekday: str):
-        if weekday[:3] not in self.WEEKDAYS.keys():
+        wd = weekday[:3].capitalize()
+        if wd not in self.WEEKDAYS.keys():
             raise ValueError(f"Weekday {weekday} not recognised")
-        self._weekday = weekday[:3]
+        self._weekday = wd
 
     def is_busy(self):
         if not self.WEEKDAYS[self.weekday]:
@@ -60,7 +61,7 @@ class TrafficSchedule(object):
     def define_parser():
         parser = ArgumentParser(description="Traffic Schedule argument parser", add_help=False)
         parser.add_argument('--weekday', type=str, choices=list(TrafficSchedule.WEEKDAYS.keys()), default='Mon',
-                            help="Day of the week to run the analysis for")
+                            help="Day of the week to run the analysis for (initial three letters)")
         parser.add_argument('--hour', type=int, choices=list(range(24)), default=8,
                             help="Hour during the day to run the analysis for (24h day format)")
         return parser
