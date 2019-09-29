@@ -25,5 +25,5 @@ setuptools.setup(
     url="https://github.com/animaviridis/traffic-management",
     packages=setuptools.find_packages(),
     python_requires='>=3.6',
-    install_requires=['numpy>=1.17.2', 'pyddl']
+    install_requires=['numpy>=1.16', 'pyddl']
 )

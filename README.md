@@ -1,16 +1,10 @@
 # Traffic Management
-
 A simple programme to manage traffic in a simplified model of a city,
 based on planning (PDDL) and utility-driven search algorithm
 (see the task specifications file: '*assessment_CS5060_ASMNT_C_2019_2020.pdf*').
 
+
 ## Installation and running
-## Installation
-To install the program, please run the *setup.py* script:
-
-*python setup.py install*
-
-
 ### Special dependencies
 The package requires package *PyDDL* to be installed. It can be found at:
 https://github.com/garydoranjr/pyddl.
@@ -20,6 +14,12 @@ It can be installed by executing the following command:
 *pip install -e git+https://github.com/garydoranjr/pyddl.git#egg=pyddl*
 
 Detailed/alternative installation instructions are available at the project home page.
+
+
+## Installation
+To install the program, please run the *setup.py* script:
+
+*python setup.py install*
 
 ### Execution
 The main planner script is: '*traffic_management/traffic_planner/traffic_lights_system.py*'
