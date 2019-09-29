@@ -7,7 +7,6 @@ class SuburbArea(object):
         self._population = int(population)
 
         self.tp = traffic_properties or TrafficProperties()
-        self.flow = self.tp.FLOW_FACTOR * self.population
         self.queue = 0  # number of cars waiting in front of the junction
         self.last_passed = 0  # number of cars that have passed in the last (current) priority setting
         self.waiting_time = 0
@@ -15,6 +14,10 @@ class SuburbArea(object):
 
     def __repr__(self):
         return f"Suburb area {self._name} with population of {self.population: d}"
+
+    @property
+    def flow(self):
+        return self.tp.flow_factor * self.population
 
     @property
     def name(self):

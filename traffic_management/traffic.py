@@ -16,7 +16,7 @@ class TrafficSchedule(object):
     HOURS = _hour_limits
     PERIODS = _periods
 
-    def __init__(self, weekday: str, hour: int, **kwargs):
+    def __init__(self, weekday: str='Mon', hour: int=8, **kwargs):
         self._weekday = ''
         self._set_weekday(weekday)
 
@@ -59,16 +59,14 @@ class TrafficSchedule(object):
     @staticmethod
     def define_parser():
         parser = ArgumentParser(description="Traffic Schedule argument parser", add_help=False)
-        parser.add_argument('--weekday', type=str, choices=list(TrafficSchedule.WEEKDAYS.keys()),
+        parser.add_argument('--weekday', type=str, choices=list(TrafficSchedule.WEEKDAYS.keys()), default='Mon',
                             help="Day of the week to run the analysis for")
-        parser.add_argument('--hour', type=int, choices=list(range(24)),
+        parser.add_argument('--hour', type=int, choices=list(range(24)), default=8,
                             help="Hour during the day to run the analysis for (24h day format)")
         return parser
 
 
 class TrafficProperties(object):
-    FLOW_FACTOR = 0.05/60
-
     def __init__(self, junction_flow=200, wait_factor=0.1, base_time=1, ext_time=0.5, acc_time=0.5,
                  **kwargs):
 
@@ -88,6 +86,13 @@ class TrafficProperties(object):
         if acc_time > self.base_time:
             raise ValueError("Base time cannot be smaller than acceleration time")
         self.acc_time = acc_time  # time before reaching the nominal junction flow
+
+        # True for busy, False for not busy
+        self._base_flow_factors = {True: 0.05/60, False: 0.02/60}
+
+    @property
+    def flow_factor(self):
+        return self._base_flow_factors[self.schedule.busy]
 
     @staticmethod
     def from_parser(parsed_args):
