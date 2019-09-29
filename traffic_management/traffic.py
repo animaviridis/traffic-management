@@ -56,11 +56,24 @@ class TrafficSchedule(object):
     def busy(self):
         return self._busy
 
+    @staticmethod
+    def define_parser():
+        parser = ArgumentParser(description="Traffic Schedule argument parser", add_help=False)
+        parser.add_argument('--weekday', type=str, choices=list(TrafficSchedule.WEEKDAYS.keys()),
+                            help="Day of the week to run the analysis for")
+        parser.add_argument('--hour', type=int, choices=list(range(24)),
+                            help="Hour during the day to run the analysis for (24h day format)")
+        return parser
+
 
 class TrafficProperties(object):
     FLOW_FACTOR = 0.05/60
 
-    def __init__(self, junction_flow=200, wait_factor=0.1, base_time=1, ext_time=0.5, acc_time=0.5):
+    def __init__(self, junction_flow=200, wait_factor=0.1, base_time=1, ext_time=0.5, acc_time=0.5,
+                 **kwargs):
+
+        self.schedule = TrafficSchedule(**kwargs)
+
         self.junction_flow = junction_flow
         self.wait_factor = wait_factor  # 'frustration factor' due to waiting
 
@@ -84,11 +97,14 @@ class TrafficProperties(object):
                                  wait_factor=parsed_args.wait_factor,
                                  base_time=parsed_args.base_time,
                                  ext_time=parsed_args.base_time,
-                                 acc_time=parsed_args.acc_time)
+                                 acc_time=parsed_args.acc_time,
+                                 weekday=parsed_args.weekday,
+                                 hour=parsed_args.hour)
 
     @staticmethod
     def define_parser():
-        parser = ArgumentParser(description="TrafficProperties argument parser", add_help=False)
+        parser = ArgumentParser(description="TrafficProperties argument parser", add_help=False,
+                                parents=[TrafficSchedule.define_parser()])
         parser.add_argument('--junction-flow', default=200, type=float,
                             help="Flow through the junction [cars/minute].")
         parser.add_argument('--wait-factor', default=0.01, type=float,
