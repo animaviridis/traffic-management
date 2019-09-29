@@ -1,8 +1,8 @@
 from collections import defaultdict
 from argparse import ArgumentParser
 
-from traffic_management.traffic import TrafficProperties
-from traffic_management.suburb_area import SuburbArea
+from traffic_management.traffic.traffic_properties import TrafficProperties
+from traffic_management.traffic.suburb_area import SuburbArea
         
 
 class City(object):

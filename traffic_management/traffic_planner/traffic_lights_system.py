@@ -1,10 +1,10 @@
 from argparse import ArgumentParser
-
 from pyddl import Domain, neg
-from custom_pyddl.action import Action
-from custom_pyddl.problem import Problem
-from custom_pyddl.planner import DNPlanner
-from traffic_management.city import City, define_city
+
+from traffic_management.custom_pyddl.action import Action
+from traffic_management.custom_pyddl.problem import Problem
+from traffic_management.custom_pyddl.planner import DNPlanner
+from traffic_management.traffic.city import City, define_city
 
 
 def define_domain(city):

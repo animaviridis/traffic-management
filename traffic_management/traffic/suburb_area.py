@@ -1,4 +1,4 @@
-from traffic_management.traffic import TrafficProperties
+from traffic_management.traffic.traffic_properties import TrafficProperties
 
 
 class SuburbArea(object):
