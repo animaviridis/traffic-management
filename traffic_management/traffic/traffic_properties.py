@@ -101,7 +101,7 @@ class TrafficProperties(object):
         return TrafficProperties(junction_flow=parsed_args.junction_flow,
                                  wait_factor=parsed_args.wait_factor,
                                  base_time=parsed_args.base_time,
-                                 ext_time=parsed_args.base_time,
+                                 ext_time=parsed_args.ext_time,
                                  acc_time=parsed_args.acc_time,
                                  weekday=parsed_args.weekday,
                                  hour=parsed_args.hour)
