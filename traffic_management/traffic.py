@@ -1,4 +1,60 @@
 from argparse import ArgumentParser
+import datetime as dt
+import numpy as np
+
+_working_days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri')
+_weekend = ('Sat', 'Sun')
+_weekdays = {**{day: 1 for day in _working_days},
+             **{calm_day: 0 for calm_day in ('Sat', 'Sun')}}
+
+_hour_limits = [dt.time(hour=h) for h in (7, 10, 16, 19)]
+_periods = {k: k%2 for k in range(5)}
+
+
+class TrafficSchedule(object):
+    WEEKDAYS = _weekdays
+    HOURS = _hour_limits
+    PERIODS = _periods
+
+    def __init__(self, weekday: str, hour: int, **kwargs):
+        self._weekday = ''
+        self._set_weekday(weekday)
+
+        self._time = dt.time(hour=hour, **kwargs)
+        self._busy = self.is_busy()
+
+    def set_time(self, **kwargs):
+        self._time = dt.time(**kwargs)
+        self._busy = self.is_busy()
+
+    @property
+    def weekday(self):
+        return self._weekday
+
+    @weekday.setter
+    def weekday(self, weekday: str):
+        self._set_weekday(weekday)
+        self._busy = self.is_busy()
+
+    @property
+    def time(self):
+        return self._time
+
+    def _set_weekday(self, weekday: str):
+        if weekday[:3] not in self.WEEKDAYS.keys():
+            raise ValueError(f"Weekday {weekday} not recognised")
+        self._weekday = weekday[:3]
+
+    def is_busy(self):
+        if not self.WEEKDAYS[self.weekday]:
+            return False
+
+        period = np.searchsorted(self.HOURS, self.time)
+        return bool(self.PERIODS[period])
+
+    @property
+    def busy(self):
+        return self._busy
 
 
 class TrafficProperties(object):
