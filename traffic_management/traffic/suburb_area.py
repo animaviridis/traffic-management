@@ -2,6 +2,8 @@ from traffic_management.traffic.traffic_properties import TrafficProperties
 
 
 class SuburbArea(object):
+    """Model of a suburb area - component of the city."""
+
     def __init__(self, name: str, population: float, traffic_properties=None):
         self._name = name
         self._population = int(population)

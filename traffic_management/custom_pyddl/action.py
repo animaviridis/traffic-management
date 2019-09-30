@@ -2,6 +2,8 @@ import pyddl
 
 
 class Action(pyddl.Action):
+    """Custom version of pyddl.Action to make use of the custom grounding method."""
+
     def __init__(self, *args, external_actor=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.external_actor = external_actor
@@ -11,6 +13,11 @@ class Action(pyddl.Action):
 
 
 class GroundedAction(object):
+    """Customised pyddl._GroundAction, written to delay evaluation of the numerical effects to action application.
+
+    Note: the original class was not suitable for subclassing due to two facts: being protected (underscore-starting
+    name) and having most of the code to be changed put in a single method - __init__."""
+
     def __init__(self, action, *args):
         """Note: this method comes mostly from pyddl._GroundedAction.__init__; it has been split into sub-methods."""
 
@@ -81,9 +88,13 @@ class GroundedAction(object):
         return _ground_by_names
 
     def evaluate_external(self):
+        """Evaluate the effect of an action (one of possible actions) by consulting the external model."""
+
         return self.external_actor.evaluate_action[self.name](*self.sig[1:])
 
     def apply_external(self):
+        """Apply the effects of the chosen action in the external model (i.e. update the model state)."""
+
         return self.external_actor.apply_action[self.name](*self.sig[1:])
 
     def __str__(self):

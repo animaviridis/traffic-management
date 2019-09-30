@@ -2,7 +2,11 @@ from time import time
 
 
 class DNPlanner(object):
-    """Utility-driven PDDL planner. Heavily inspired by pyddl.planner."""
+    """Utility-driven hill-climbing PDDL planner.
+
+    Note: heavily inspired by pyddl.planner - in terms of syntax and usage of the Problem and State classes.
+    However, the planning algorithm is different - hill climbing instead of A*.
+    """
 
     def __init__(self, problem, verbose=True):
         self.problem = problem

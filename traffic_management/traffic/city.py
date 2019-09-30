@@ -6,6 +6,8 @@ from traffic_management.traffic.suburb_area import SuburbArea
         
 
 class City(object):
+    """Simulation of the city - assembly of four suburbs."""
+
     def __init__(self, name: str = None, traffic_properties=None):
         self._name = name if name is not None else ''
         self.tp = traffic_properties or TrafficProperties()
@@ -13,10 +15,12 @@ class City(object):
         self._suburbs = {}
         self.prioritised = ''
 
+        # City as the 'external actor' in customised pyddl planner/action
         self.apply_action = {'switch-priority': self.switch_priority,
                              'extend-priority': self.extend_priority}
         self.evaluate_action = {f: self.evaluate_priority_decision for f in ('switch-priority', 'extend-priority')}
 
+        # keeping track of the priority changes
         self.priority_record = []
         self.priority_summary = defaultdict(lambda: 0)
 
@@ -48,6 +52,8 @@ class City(object):
                 suburb.wait(time)
 
     def switch_priority(self, s1, s2, time=None):
+        """Switch priority to a different suburb"""
+
         time = time or self.tp.base_time
 
         if s1:
@@ -62,6 +68,8 @@ class City(object):
         print(f"Switched to {s2}; queue: {tuple(self.queue.values())}")
 
     def extend_priority(self, s, time=None):
+        """Extend priority for the currently prioritised suburb"""
+
         time = time or self.tp.ext_time
         if not self.suburbs[s].prioritised:
             raise ValueError(f"{s} is not currently prioritised")
@@ -71,17 +79,23 @@ class City(object):
         print(f"Extended {s}; queue: {tuple(self.queue.values())}")
 
     def _apply_priority(self, time):
+        """Pass cars from the prioritised suburb. Accumulate incoming cars in queues."""
+
         s = self.prioritised
         self.suburbs[s].go(time)
         self.wait(time)
         self.priority_summary[s] += time
 
     def evaluate_priority_decision(self, *suburbs, time=None):
+        """Evaluate the effects of a possible priority change: use the decision network's utility function."""
+
         s = suburbs[-1]
         time = time or (self.tp.base_time if len(suburbs) > 1 else self.tp.ext_time)
         return (self.get_cars_out(s, time) - self.tp.wait_factor * self.get_acc_waiting_time(s, time)) / time
 
     def get_acc_waiting_time(self, s_prioritised, time):
+        """Get accumulated waiting time from all suburbs which are not to be prioritised in the next stage."""
+
         acc_waiting_time = 0
         for suburb in self.suburbs.values():
             if suburb.name != s_prioritised:
@@ -89,9 +103,15 @@ class City(object):
         return acc_waiting_time
 
     def get_cars_out(self, s_prioritised, time=None):
+        """Get number of cars which can pass through the junction from/to given suburb."""
+
         return self.suburbs[s_prioritised].get_cars_out(time)
 
     def get_cars_out_from_action(self, *args):
+        """Get number of cars which can pass through the junction from/to given suburb.
+
+        To be called from action evaluation method."""
+
         return self.get_cars_out(args[-1])
 
     @property
