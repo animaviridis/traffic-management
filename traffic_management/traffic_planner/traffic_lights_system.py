@@ -72,6 +72,7 @@ def main():
     city = define_city(parsed_args=parsed_args)
     city.wait(parsed_args.init_wait)
     city.switch_priority('', parsed_args.initial_priority)
+    city.clear_priority_record()
 
     problem = define_problem(city, time_window=parsed_args.time_window)
     make_plan(city, problem)

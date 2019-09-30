@@ -39,6 +39,7 @@ class DNPlanner(object):
         best_action.apply_external()
 
     def solve(self):
+        print("\nStarting the planner")
         start_time = time()
 
         while not self.current_state.is_true(*self.goal):
@@ -47,8 +48,7 @@ class DNPlanner(object):
         plan = self.current_state.plan()
 
         if self.verbose:
-            print(f"Planning completed in {time() - start_time:g} s")
+            print(f"\nPlanning completed in {time() - start_time:g} s")
             print(f"Plan length: {len(plan)}")
-            print(f"Total cost: {self._total_cost:g}")
 
         return plan

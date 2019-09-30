@@ -20,6 +20,10 @@ class City(object):
         self.priority_record = []
         self.priority_summary = defaultdict(lambda: 0)
 
+    def clear_priority_record(self):
+        self.priority_record = [(self.prioritised, 0)]
+        self.priority_summary = defaultdict(lambda: 0)
+
     def __repr__(self):
         return f"City{' ' + self._name if self._name else ''} with suburb areas: {', '.join(self.suburb_names)}"
 
