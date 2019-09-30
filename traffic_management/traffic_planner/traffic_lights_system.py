@@ -57,10 +57,10 @@ def make_plan(city, problem):
 
 def parse_args():
     parser = ArgumentParser(description="Traffic problem solver argument parser", parents=[City.define_parser()])
-    parser.add_argument('--time-window', default=20, type=float, help="Analysis time window")
+    parser.add_argument('--time-window', default=5, type=float, help="Analysis time window")
     parser.add_argument('--initial-priority', default='A',
                         help="Area to which th priority should be switched before start of the analysis")
-    parser.add_argument('--init-wait', type=float, default=1,
+    parser.add_argument('--init-wait', type=float, default=3,
                         help="Waiting time [min] to be applied to all suburb areas before the analysis "
                              "(to accumulate some cars in front of the junction)")
     return parser.parse_args()
@@ -70,10 +70,10 @@ def main():
     parsed_args = parse_args()
 
     city = define_city(parsed_args=parsed_args)
-    city.switch_priority('', parsed_args.initial_priority)
     city.wait(parsed_args.init_wait)
+    city.switch_priority('', parsed_args.initial_priority)
 
-    problem = define_problem(city)
+    problem = define_problem(city, time_window=parsed_args.time_window)
     make_plan(city, problem)
 
 
