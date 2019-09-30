@@ -45,12 +45,13 @@ def make_plan(city, problem):
     planner = DNPlanner(problem)
     plan = planner.solve()
 
-    print(f"\nPriority record:")
+    print(f"\nPriority sequence:")
     for s, t in city.priority_record:
-        print(f"{s}: {t}")
+        print(f"{s}: {t} min")
 
-    print(f"------------\n{dict(city.priority_summary)} "
-          f"({len(city.priority_record)} changes; total time: {sum(city.priority_summary.values())})")
+    print(f"------------\n"
+          f"Summary: \n{'; '.join(f'{k}: {v} min' for k, v in city.priority_summary.items())} \n"
+          f"({len(city.priority_record)} priority changes; total time: {sum(city.priority_summary.values())} min)")
 
     return plan
 
