@@ -11,7 +11,9 @@ https://github.com/garydoranjr/pyddl.
 
 It can be installed by executing the following command:
 
-*pip install -e git+https://github.com/garydoranjr/pyddl.git#egg=pyddl*
+```console
+C:\Users\xyz> pip install -e git+https://github.com/garydoranjr/pyddl.git#egg=pyddl
+```
 
 Detailed/alternative installation instructions are available at the project home page.
 
@@ -19,18 +21,25 @@ Detailed/alternative installation instructions are available at the project home
 ## Installation
 To install the program, please run the *setup.py* script:
 
-*python setup.py install*
+```console
+C:\Users\xyz> cd path_to_the_project\traffic_management
+C:\path_to_the_project\traffic_management> python setup.py install
+```
 
 ### Execution
 The main planner script is: '*traffic_management/traffic_planner/traffic_lights_system.py*'
 After navigating to the '*traffic_management/traffic_planner/*' directory, it can be executed by:
 
-*python traffic_lights_system.py*
+```console
+C:\...\traffic_management> cd traffic_planner
+C:\...\traffic_management\traffic_planner> python traffic_lights_system.py
+```
 
-To learn about the available options to adjust the planning problem, type:
+To learn about the available options to adjust the planning problem, use:
 
-*python traffic_lights_system.py --help*
-
+```console
+C:\...\traffic_management\traffic_planner> python traffic_lights_system.py --help
+```
 
 ##  Disclaimer
 Code in package *custom_pyddl* is a customised version of *PyDDL*.
